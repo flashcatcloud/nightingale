@@ -58,7 +58,9 @@ func consumer() {
 		for {
 			select {
 			case err := <-consumer.Errors():
-				logger.Error(err)
+				if err != nil {
+					logger.Error("consumer ", err)
+				}
 			case msg := <-consumer.Messages():
 				if msg == nil {
 					continue

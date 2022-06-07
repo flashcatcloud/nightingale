@@ -237,6 +237,9 @@ func HostUnderNode(nid int64) ([]string, error) {
 	resources := cache.ResourceCache.GetByIds(rids)
 	var idents []string
 	for i := range resources {
+		if resources[i] == nil {
+			continue
+		}
 		idents = append(idents, resources[i].Ident)
 	}
 
