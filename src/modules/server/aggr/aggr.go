@@ -25,6 +25,7 @@ type AggrSection struct {
 	KafkaAddrs        []string `yaml:"kafkaAddrs"`
 	KafkaAggrInTopic  string   `yaml:"kafkaAggrInTopic"`
 	KafkaAggrOutTopic string   `yaml:"kafkaAggrOutTopic"`
+	ConsumerError     bool     `yaml:"consumerError"`
 }
 
 var AggrConfig AggrSection

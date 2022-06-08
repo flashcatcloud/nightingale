@@ -22,7 +22,15 @@ func consumer() {
 	}
 
 	config := sarama.NewConfig()
-	config.Consumer.Return.Errors = true
+	config.Consumer.Return.Errors = aggr.AggrConfig.ConsumerError
+
+	if !config.Consumer.Return.Errors {
+		fw, err := os.OpenFile("kafka_error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatalf("create consumer err log err:%v", err)
+		}
+		sarama.Logger = log.New(fw, "[Sarama] ", log.LstdFlags)
+	}
 
 	// Specify brokers address. This is default one
 	brokers := aggr.AggrConfig.KafkaAddrs
