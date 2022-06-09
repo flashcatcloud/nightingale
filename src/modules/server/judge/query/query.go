@@ -2,20 +2,20 @@ package query
 
 import (
 	"errors"
-	"github.com/didi/nightingale/v4/src/common/slice"
-	"github.com/didi/nightingale/v4/src/modules/server/backend"
-	"github.com/jinzhu/copier"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/didi/nightingale/v4/src/common/dataobj"
+	"github.com/didi/nightingale/v4/src/common/slice"
 	"github.com/didi/nightingale/v4/src/common/stats"
 	"github.com/didi/nightingale/v4/src/common/str"
 	"github.com/didi/nightingale/v4/src/models"
+	"github.com/didi/nightingale/v4/src/modules/server/backend"
 	"github.com/didi/nightingale/v4/src/modules/server/cache"
 
+	"github.com/jinzhu/copier"
 	"github.com/toolkits/pkg/logger"
 )
 
@@ -279,7 +279,7 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 	var allData []IndexData
 
 	// 切分500一批的分批并发查询，避免一次查询主机过多，给存储太大压力
-	endpointsGroupList := slice.ArrayInGroupsOf(request.Endpoints,500)
+	endpointsGroupList := slice.ArrayInGroupsOf(request.Endpoints, 500)
 	dataSource, err := backend.GetDataSourceFor("")
 	if err != nil {
 		logger.Warningf("could not find datasource")
@@ -301,8 +301,8 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 			Nids:      request.Nids,
 			Endpoints: endpoints,
 			Metric:    request.Metric,
-			Exclude:    Exclude,
-			Include:    Include,
+			Exclude:   Exclude,
+			Include:   Include,
 		}
 
 		wg.Add(1)
@@ -313,7 +313,9 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 			if err := copier.Copy(&result, &resp); err != nil {
 				logger.Errorf("Copy to IndexData struct error")
 			}
-			allData = append(allData, result...)
+			if len(result) > 0 {
+				allData = append(allData, result...)
+			}
 		}()
 	}
 	wg.Wait()
