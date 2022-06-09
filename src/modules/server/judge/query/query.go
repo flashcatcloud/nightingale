@@ -314,8 +314,9 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 				logger.Errorf("Copy to IndexData struct error")
 				return
 			}
-			if len(result) > 0 {
-				allData = append(allData, result...)
+
+			for i := 0; i < len(result); i++ {
+				allData = append(allData, result[i])
 			}
 		}()
 	}
