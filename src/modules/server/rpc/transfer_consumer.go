@@ -49,7 +49,7 @@ func consumer() {
 
 	topic := aggr.AggrConfig.KafkaAggrOutTopic
 	// How to decide partition, is it fixed value...?
-	consumer, err := master.ConsumePartition(topic, 0, sarama.OffsetOldest)
+	consumer, err := master.ConsumePartition(topic, 0, sarama.OffsetNewest)
 	if err != nil {
 		log.Fatalf("create consumer err:%v", err)
 	}
