@@ -312,6 +312,7 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 			resp := dataSource.QueryIndexByClude([]dataobj.CludeRecv{reqData})
 			if err := copier.Copy(&result, &resp); err != nil {
 				logger.Errorf("Copy to IndexData struct error")
+				return
 			}
 			if len(result) > 0 {
 				allData = append(allData, result...)
