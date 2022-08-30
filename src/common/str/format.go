@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cespare/xxhash"
+	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/str"
 )
 
@@ -22,12 +23,22 @@ var bufferPool = sync.Pool{New: func() interface{} { return new(bytes.Buffer) }}
 // endpoint/counter
 // metric/tags
 // strs 参数必须按照上面的顺序来入参
+
+const maxInt = int(^uint(0) >> 1)
+
 func PK(strs ...string) string {
 	ret := bufferPool.Get().(*bytes.Buffer)
 	ret.Reset()
 	defer bufferPool.Put(ret)
 	count := len(strs)
 	if count == 0 {
+		return ""
+	}
+	c := ret.Cap()
+
+	// fix too large panic
+	if c > maxInt-c-len(strs[0]) {
+		logger.Errorf("too large string %s", strs[0])
 		return ""
 	}
 
