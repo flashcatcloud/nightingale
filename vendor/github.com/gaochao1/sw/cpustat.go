@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gaochao1/gosnmp"
+	"github.com/ulricqin/gosnmp"
 )
 
 func CpuUtilization(ip, community string, timeout, retry int) (int, error) {
@@ -15,7 +15,10 @@ func CpuUtilization(ip, community string, timeout, retry int) (int, error) {
 			log.Println(ip+" Recovered in CPUtilization", r)
 		}
 	}()
-	vendor, err := SysVendor(ip, community, timeout)
+	vendor, err := SysVendor(ip, community, retry, timeout)
+	if err != nil {
+		return 0, err
+	}
 	method := "get"
 	var oid string
 
@@ -36,7 +39,7 @@ func CpuUtilization(ip, community string, timeout, retry int) (int, error) {
 	case "Huawei", "Huawei_V5.70", "Huawei_V5.130":
 		oid = "1.3.6.1.4.1.2011.5.25.31.1.1.1.1.5"
 		return getH3CHWcpumem(ip, community, oid, timeout, retry)
-	case "Huawei_V3.10":
+	case "Huawei_V3.10", "H3c_V3.10":
 		oid = "1.3.6.1.4.1.2011.6.1.1.1.3"
 		return getH3CHWcpumem(ip, community, oid, timeout, retry)
 	case "Huawei_ME60":
@@ -56,9 +59,21 @@ func CpuUtilization(ip, community string, timeout, retry int) (int, error) {
 		return getRuijiecpumem(ip, community, oid, timeout, retry)
 	case "Dell":
 		oid = "1.3.6.1.4.1.674.10895.5000.2.6132.1.1.1.1.4.11"
-		return getDellCpu(ip, community, oid, timeout, retry)
+		return getSnmpNextCpu(ip, community, oid, timeout, retry)
+	case "Linux":
+		oid = "1.3.6.1.4.1.2021.11.11.0"
+		return getLinuxCpu(ip, community, oid, timeout, retry)
+	case "A10":
+		oid = "1.3.6.1.4.1.22610.2.4.1.3.3"
+		return getSnmpNextCpu(ip, community, oid, timeout, retry)
+	case "Aruba":
+		oid = "1.3.6.1.4.1.14823.2.2.1.1.1.9.1.3"
+		return getSnmpNextCpu(ip, community, oid, timeout, retry)
+	case "Cisco_Controller":
+		oid = "1.3.6.1.4.1.14179.1.1.5.1"
+		return getSnmpNextCpu(ip, community, oid, timeout, retry)
 	default:
-		err = errors.New(ip + "Switch Vendor is not defined")
+		err = errors.New(ip + " Switch Vendor is not defined")
 		return 0, err
 	}
 
@@ -156,7 +171,7 @@ func getHuawei_ME60cpu(ip, community, oid string, timeout, retry int) (value int
 	return 0, err
 }
 
-func getDellCpu(ip, community, oid string, timeout, retry int) (value int, err error) {
+func getSnmpNextCpu(ip, community, oid string, timeout, retry int) (value int, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -176,6 +191,28 @@ func getDellCpu(ip, community, oid string, timeout, retry int) (value int, err e
 	}
 
 	return snmpPDUs[0].Value.(int), err
+}
+
+func getLinuxCpu(ip, community, oid string, timeout, retry int) (value int, err error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println(ip+" Recovered in CPUtilization", r)
+		}
+	}()
+	method := "get"
+
+	var snmpPDUs []gosnmp.SnmpPDU
+
+	for i := 0; i < retry; i++ {
+		snmpPDUs, err = RunSnmp(ip, community, oid, method, timeout)
+		if len(snmpPDUs) > 0 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	return (100 - snmpPDUs[0].Value.(int)), err
 }
 
 func snmp_walk_sum(ip, community, oid string, timeout, retry int) (value_sum int, value_count int, err error) {

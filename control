@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # release version
-version=4.0.9
+version=4.0.10
 
 CWD=$(cd $(dirname $0)/; pwd)
 cd $CWD
@@ -142,7 +142,7 @@ build_local_one()
 
 build()
 {
-	export GO111MODULE=on
+	# export GO111MODULE=on
 
 	mod=$1
 	if [ "x${mod}" = "x" ]; then

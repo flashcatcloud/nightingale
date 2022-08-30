@@ -3,7 +3,7 @@ package ping
 import (
 	"time"
 
-	ping "github.com/sparrc/go-ping"
+	ping "github.com/go-ping/ping"
 	"github.com/toolkits/pkg/logger"
 )
 

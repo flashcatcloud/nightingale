@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	"gopkg.in/ldap.v3"
+	"github.com/go-ldap/ldap/v3"
 
 	"github.com/toolkits/pkg/logger"
 )

@@ -15,7 +15,6 @@ import (
 	"github.com/didi/nightingale/v4/src/modules/server/backend"
 	"github.com/didi/nightingale/v4/src/modules/server/cache"
 
-	"github.com/jinzhu/copier"
 	"github.com/toolkits/pkg/logger"
 )
 
@@ -273,17 +272,34 @@ type IndexResp struct {
 	Err  string      `json:"err"`
 }
 
+type SafeIndexResp struct {
+	sync.RWMutex
+	Data []IndexData `json:"dat"`
+}
+
+func (s *SafeIndexResp) Appends(indexDatas []IndexData) {
+	s.Lock()
+	defer s.Unlock()
+	s.Data = append(s.Data, indexDatas...)
+}
+
+func (s *SafeIndexResp) Get() []IndexData {
+	s.RLock()
+	defer s.RUnlock()
+	return s.Data
+}
+
 // index的xclude 不支持批量查询, 暂时不做
 func Xclude(request *IndexReq) ([]IndexData, error) {
 	var err error
-	var allData []IndexData
+	var allData SafeIndexResp
 
 	// 切分500一批的分批并发查询，避免一次查询主机过多，给存储太大压力
 	endpointsGroupList := slice.ArrayInGroupsOf(request.Endpoints, 500)
 	dataSource, err := backend.GetDataSourceFor("")
 	if err != nil {
 		logger.Warningf("could not find datasource")
-		return allData, err
+		return []IndexData{}, err
 	}
 
 	wg := sync.WaitGroup{}
@@ -310,17 +326,21 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 			defer wg.Done()
 			var result []IndexData
 			resp := dataSource.QueryIndexByClude([]dataobj.CludeRecv{reqData})
-			if err := copier.Copy(&result, &resp); err != nil {
-				logger.Errorf("Copy to IndexData struct error")
-				return
+			for i := 0; i < len(resp); i++ {
+				indexData := IndexData{
+					Nid:      resp[i].Nid,
+					Endpoint: resp[i].Endpoint,
+					Metric:   resp[i].Metric,
+					Tags:     resp[i].Tags,
+					Step:     resp[i].Step,
+					Dstype:   resp[i].DsType,
+				}
+				result = append(result, indexData)
 			}
-
-			for i := 0; i < len(result); i++ {
-				allData = append(allData, result[i])
-			}
+			allData.Appends(result)
 		}()
 	}
 	wg.Wait()
 
-	return allData, nil
+	return allData.Get(), nil
 }

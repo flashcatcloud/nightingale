@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-ldap/ldap/v3"
 	"github.com/toolkits/pkg/cache"
 	"github.com/toolkits/pkg/errors"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/slice"
 	"github.com/toolkits/pkg/str"
-	"gopkg.in/ldap.v3"
 )
 
 const (
