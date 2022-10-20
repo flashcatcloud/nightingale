@@ -10,7 +10,7 @@ require (
 	github.com/gaochao1/sw v1.0.0
 	github.com/garyburd/redigo v1.6.2
 	github.com/gin-contrib/pprof v1.3.0
-	github.com/gin-gonic/gin v1.6.3
+	github.com/gin-gonic/gin v1.7.4
 	github.com/go-ldap/ldap/v3 v3.4.4
 	github.com/go-ping/ping v0.0.0-20201115131931-3300c582a663
 	github.com/go-sql-driver/mysql v1.5.0
@@ -22,7 +22,7 @@ require (
 	github.com/influxdata/influxdb v1.8.0
 	github.com/influxdata/telegraf v1.17.2
 	github.com/jackc/pgx v3.6.0+incompatible
-	github.com/json-iterator/go v1.1.9
+	github.com/json-iterator/go v1.1.12
 	github.com/lib/pq v1.6.0
 	github.com/m3db/m3 v0.15.17
 	github.com/mattn/go-isatty v0.0.12
@@ -35,12 +35,12 @@ require (
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.2
 	github.com/toolkits/file v0.0.0-20160325033739-a5b3c5147e07
-	github.com/toolkits/pkg v1.1.4
+	github.com/toolkits/pkg v1.3.1
 	github.com/ugorji/go/codec v1.1.7
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/text v0.3.6
+	golang.org/x/text v0.3.7
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 	xorm.io/core v0.7.3
 	xorm.io/xorm v0.8.1
 )
@@ -71,7 +71,7 @@ require (
 	github.com/go-asn1-ber/asn1-ber v1.5.4 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
-	github.com/go-playground/validator/v10 v10.2.0 // indirect
+	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
@@ -110,7 +110,7 @@ require (
 	github.com/miekg/dns v1.1.27 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect
@@ -143,7 +143,7 @@ require (
 	github.com/willf/bitset v1.1.10 // indirect
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200824191128-ae9734ed278b // indirect
 	go.uber.org/atomic v1.6.0 // indirect
-	go.uber.org/automaxprocs v1.3.0 // indirect
+	go.uber.org/automaxprocs v1.4.0 // indirect
 	go.uber.org/multierr v1.4.0 // indirect
 	go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee // indirect
 	go.uber.org/zap v1.13.0 // indirect
