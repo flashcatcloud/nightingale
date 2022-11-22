@@ -196,15 +196,19 @@ func needUpgrade(event *models.Event) bool {
 	eventAlertKey := ALERT_TIME_PREFIX + fmt.Sprint(event.HashId)
 
 	if event.EventType == models.RECOVERY {
-		if redisc.HasKey(alertUpgradeKey) {
-			err := redisc.DelKey(eventAlertKey)
-			if err != nil {
-				logger.Errorf("redis del eventAlertkey failed, key: %v, err: %v", eventAlertKey, err)
-			}
+		err := redisc.DelKey(eventAlertKey)
+		if err != nil {
+			logger.Errorf("redis del eventAlertkey failed, key: %v, err: %v", eventAlertKey, err)
+		} else {
+			logger.Infof("redis del eventAlertkey success, key: %s", eventAlertKey)
+		}
 
+		if redisc.HasKey(alertUpgradeKey) {
 			err = redisc.DelKey(alertUpgradeKey)
 			if err != nil {
 				logger.Errorf("redis del alertUpgradeKey failed, key: %v, err: %v", alertUpgradeKey, err)
+			} else {
+				logger.Infof("redis del alertUpgradeKey success, key: %s", alertUpgradeKey)
 			}
 
 			// 之前升级过，即老板已经知道了，那现在恢复了，就需要把恢复通知发给老板
