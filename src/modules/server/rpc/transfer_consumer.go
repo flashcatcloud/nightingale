@@ -1,10 +1,8 @@
 package rpc
 
 import (
+	"context"
 	"encoding/json"
-	"log"
-	"os"
-	"os/signal"
 	"strings"
 
 	"github.com/didi/nightingale/v4/src/common/dataobj"
@@ -12,92 +10,71 @@ import (
 	"github.com/didi/nightingale/v4/src/modules/server/aggr"
 	"github.com/didi/nightingale/v4/src/modules/server/cache"
 
-	"github.com/Shopify/sarama"
+	"github.com/segmentio/kafka-go"
+	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/logger"
 )
+
+var Reader *kafka.Reader
 
 func consumer() {
 	if !aggr.AggrConfig.Enabled {
 		return
 	}
 
-	config := sarama.NewConfig()
-	config.Consumer.Return.Errors = aggr.AggrConfig.ConsumerError
-
-	if !config.Consumer.Return.Errors {
-		fw, err := os.OpenFile("kafka_error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			log.Fatalf("create consumer err log err:%v", err)
-		}
-		sarama.Logger = log.New(fw, "[Sarama] ", log.LstdFlags)
+	if aggr.AggrConfig.ConsumerGroup == "" {
+		aggr.AggrConfig.ConsumerGroup = "aggr_consumer"
 	}
 
-	// Specify brokers address. This is default one
-	brokers := aggr.AggrConfig.KafkaAddrs
+	Reader = kafka.NewReader(kafka.ReaderConfig{
+		Brokers:     aggr.AggrConfig.KafkaAddrs,
+		GroupID:     aggr.AggrConfig.ConsumerGroup,
+		Topic:       aggr.AggrConfig.KafkaAggrOutTopic,
+		StartOffset: kafka.LastOffset,
+		MinBytes:    1,    // 1
+		MaxBytes:    10e6, // 10MB
+	})
 
-	// Create new consumer
-	master, err := sarama.NewConsumer(brokers, config)
+	CosumeMsg(context.Background())
+}
+
+func CosumeMsg(ctx context.Context) {
+	sema := semaphore.NewSemaphore(5)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			sema.Acquire()
+			go porcessMsg(ctx, sema)
+		}
+	}
+}
+
+func porcessMsg(ctx context.Context, sema *semaphore.Semaphore) {
+	defer sema.Release()
+
+	m, err := Reader.ReadMessage(ctx)
 	if err != nil {
-		log.Fatalf("create consumer err:%v", err)
+		if err.Error() == "context canceled" {
+			return
+		}
+
+		logger.Warning("failed to fetch message:", err)
+		return
 	}
 
-	defer func() {
-		if err := master.Close(); err != nil {
-			logger.Error(err)
-		}
-	}()
-
-	topic := aggr.AggrConfig.KafkaAggrOutTopic
-	// How to decide partition, is it fixed value...?
-	consumer, err := master.ConsumePartition(topic, 0, sarama.OffsetNewest)
-	if err != nil {
-		log.Fatalf("create consumer err:%v", err)
+	msgs := &dataobj.AggrOut{}
+	if err := json.Unmarshal(m.Value, msgs); err != nil {
+		logger.Errorf("decode message:%s failed, err:%v", string(m.Value), err)
+		return
 	}
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-
-	// Count how many message processed
-	msgCount := 0
-
-	// Get signnal for finish
-	doneCh := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case err := <-consumer.Errors():
-				if err != nil {
-					logger.Error("consumer ", err)
-				}
-			case msg := <-consumer.Messages():
-				if msg == nil {
-					continue
-				}
-
-				msgCount++
-
-				out := &dataobj.AggrOut{}
-				err := json.Unmarshal(msg.Value, out)
-				if err != nil {
-					logger.Error(err)
-				} else {
-					item := aggrOut2MetricValue(out)
-					var args []*dataobj.MetricValue
-					args = append(args, item)
-
-					stats.Counter.Set("aggr.points.in", len(args))
-					PushData(args)
-				}
-
-			case <-signals:
-				logger.Error("Interrupt is detected")
-				doneCh <- struct{}{}
-			}
-		}
-	}()
-
-	<-doneCh
-	logger.Error("Processed", msgCount, "messages")
+	item := aggrOut2MetricValue(msgs)
+	var args []*dataobj.MetricValue
+	args = append(args, item)
+	stats.Counter.Set("aggr.points.in", len(args))
+	PushData(args)
 }
 
 func aggrOut2MetricValue(out *dataobj.AggrOut) *dataobj.MetricValue {

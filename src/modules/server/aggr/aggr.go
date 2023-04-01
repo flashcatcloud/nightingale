@@ -23,6 +23,7 @@ type AggrSection struct {
 	ApiTimeout        int      `yaml:"apiTimeout"`
 	UpdateInterval    int      `yaml:"updateInterval"`
 	KafkaAddrs        []string `yaml:"kafkaAddrs"`
+	ConsumerGroup     string   `yaml:"consumerGroup"`
 	KafkaAggrInTopic  string   `yaml:"kafkaAggrInTopic"`
 	KafkaAggrOutTopic string   `yaml:"kafkaAggrOutTopic"`
 	ConsumerError     bool     `yaml:"consumerError"`
